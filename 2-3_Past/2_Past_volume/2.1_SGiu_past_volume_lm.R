@@ -76,10 +76,8 @@ summary(a4)
 summary(a5)
 summary(a6)
 
-# Modelling S Giustina past volume
 
-#### Multi-linear models #####
-# with a moving window approach 
+#### Multi-linear models using moving window ##### 
 
 datasan$Outflow_turb_lag<-lag(datasan$Outflow_turb_mo)
 
