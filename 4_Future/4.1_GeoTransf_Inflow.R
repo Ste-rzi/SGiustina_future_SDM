@@ -1,5 +1,10 @@
 
-# Libraries    -----------------------------------------------------------------
+#*******************************************************************************
+# # This script to upload future modelled values of water inflow to S.Giustina
+
+#*******************************************************************************
+
+#### Libraries ####
 library("ggplot2")
 library("tidyr")
 library("dplyr")
@@ -9,7 +14,6 @@ library("scales")
 #### Uploading datasets ####
 # past values
 san_baseline_vol<-readRDS("C:/Users/STerzi/Documents/R/Noce/HydroNoce/S.Giustina/1_Ordered_scripts/4-5_Past/4_Past_volume/sangiu_volume_baseline.rds")
-  
 san_baseline_out<-readRDS("C:/Users/STerzi/Documents/R/Noce/HydroNoce/S.Giustina/1_Ordered_scripts/4-5_Past/4_Past_volume/sangiu_outflow_baseline.rds")
 
 
@@ -75,7 +79,7 @@ test4<-san_baseline_out %>%
   summarise(Avrg_out=mean(Out_lmer, na.rm=T))
   
 
-# saving quantiles from past real values
+# saving quantiles from past values
 Q_in10<-quantile(san_baseline_vol$Inflow_sim_mo, 0.10, na.rm=T)
 Q_in30<-quantile(san_baseline_vol$Inflow_sim_mo, 0.30, na.rm=T)
 Q_in80<-quantile(san_baseline_vol$Inflow_sim_mo, 0.80, na.rm=T)
@@ -85,7 +89,6 @@ Q_in90<-quantile(san_baseline_vol$Inflow_sim_mo, 0.90, na.rm=T)
 #### Plot inflow values ####
 
 col_inflo<-c("#9a9a9a", "#838383", "#676767", "#323232")
-  # c("#a6373f", "#530006", "#50A162", "#00400E")
 
 inflow_plot<-inflow_all %>% 
   rename(., Legend=Variable) %>% 
@@ -96,7 +99,6 @@ inflow_plot<-inflow_all %>%
   facet_grid(Scenario ~ Time_period, scales="free_x")+
   labs(x="", y="Inflow [Mm3/month]",
        title="Future water inflows")+
-  # \nTime [Months]
   theme_bw()+
   theme(axis.text.x=element_text(angle = 45, hjust = 1, size = 20),
         axis.text.y = element_text(size = 24),
@@ -121,7 +123,7 @@ ggsave("~/R/Noce/HydroNoce/S.Giustina/02_images/S.Giustina_inflow_all.png", plot
 
 #### Monthly variation ####
 
-# extracting montlhy values from datasan for Volume and Outflow
+# extracting monthly values from datasan for Volume and Outflow
 inflow_all_mo<-inflow_all %>% 
   group_by(Scenario, Time_period, mo) %>% 
   mutate(Inflow_meanmo=mean(Value, na.rm=T)) %>% 
