@@ -1,6 +1,6 @@
 
 #*******************************************************************************
-# # This script to carry out linear regression of past water stored in  S.Giustina
+# # This script to carry out multi-linear regression of past water stored in S.Giustina
 
 #*******************************************************************************
 
