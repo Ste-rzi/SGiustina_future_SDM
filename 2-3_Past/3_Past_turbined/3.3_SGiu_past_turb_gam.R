@@ -1,11 +1,4 @@
 
-
-#*******************************************************************************
-# # Script with generalized additive model to predict past water stored in S.Giustina
-
-#*******************************************************************************
-
-
 #### Library ####
 library("mgcv")
 library("gridExtra")
@@ -27,11 +20,11 @@ for(i in 110:(nrow(data_play)-1)){
   train = subset(data_play, id <= i)
   test = subset(data_play, id > i)
   
-  li_pred<-list(gam_v1 = gam(Volume_mo ~ s(Inflow_sim_mo, k=5), train, family=poisson),
-                gam_v2 = gam(Volume_mo ~ s(Inflow_sim_lag, k=5), train, family=poisson),
-                gam_v3 = gam(Volume_mo ~ s(Inflow_sim_mo, k=5) + s(Outflow_turb_mo, k=5), train, family=poisson),
-                gam_v4 = gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(Outflow_turb_mo, k=5), train, family=poisson),
-                gam_v5 = gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(Outflow_turb_lag, k=5), train, family=poisson))
+  li_pred<-list(gam_v1 = gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) + (mo), train, family=poisson),
+                gam_v2 = gam(Outflow_turb_mo ~ s(Inflow_sim_lag, k=5) + (mo), train, family=poisson),
+                gam_v3 = gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer, k=5) + (mo), train, family=poisson),
+                gam_v4 = gam(Outflow_turb_mo ~ s(Inflow_sim_lag, k=5) +  s(Vol_lmer, k=5) + (mo), train, family=poisson),
+                gam_v5 = gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer_lag, k=5) + (mo), datasan, family=poisson))
   
   
   test<-cbind.data.frame(test, predict(li_pred, test))
@@ -59,7 +52,6 @@ r2.1<-r2.1[-c(nrow(r2.1)-1,nrow(r2.1)), ]
 
 # storing results in a dataframe
 moving_res<-do.call(rbind, li_res)
-
 
 # averaging R-squared
 r2.1 %>% 
@@ -113,11 +105,10 @@ for(i in 110:(nrow(data_play)-1)){
   train = subset(data_play, id <= i)
   test = subset(data_play, id > i)
   
-  li_pred<-list(gam_random_v1 = gam(Volume_mo ~ s(Inflow_sim_mo, k=5) + s(mo, bs="re"), train, family=poisson),
-                gam_random_v2 = gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(mo, bs="re"), train, family=poisson),
-                gam_random_v3 = gam(Volume_mo ~ s(Inflow_sim_mo, k=5) + s(Outflow_turb_mo, k=5) + s(mo, bs="re"), train, family=poisson),
-                gam_random_v4 = gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(Outflow_turb_mo, k=5) + s(mo, bs="re"), train, family=poisson),
-                gam_random_v5 = gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(Outflow_turb_lag, k=5) + s(mo, bs="re"), train, family=poisson))
+  li_pred<-list(gam_random_v1 = gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(mo, bs="re"), train, family=poisson),
+                gam_random_v2 = gam(Outflow_turb_mo ~ s(Inflow_sim_lag, k=5) + s(mo, bs="re"), train, family=poisson)
+                gam_random_v3 = gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer, k=5) + s(mo, bs="re"), train, family=poisson)
+                gam_random_v4 = gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer_lag, k=5) + s(mo, bs="re"), train, family=poisson))
   
   
   test<-cbind.data.frame(test, predict(li_pred, test))
@@ -145,7 +136,6 @@ r2.1<-r2.1[-c(nrow(r2.1)-1,nrow(r2.1)), ]
 
 # storing results in a dataframe
 moving_res<-do.call(rbind, li_res)
-
 
 # averaging R-squared
 r2.1 %>% 
@@ -183,111 +173,106 @@ moving_res %>%
   scale_x_date(breaks = pretty_breaks(15))+
   theme_light(base_size = 20)
 
+
 #### Fitting all data ####
+data_play<-datasan
 
-# no random effect
-gam_v1<- gam(Volume_mo ~ s(Inflow_sim_mo, k=5), data_play, family=poisson)
-summary(gam_v1)$r.sq
+gam1<- gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) + (mo), datasan, family=poisson)
+summary(gam1)$r.sq
 
-gam_v2<- gam(Volume_mo ~ s(Inflow_sim_lag, k=5), data_play, family=poisson)
-summary(gam_v2)$r.sq
+gam2<- gam(Outflow_turb_mo ~ s(Inflow_sim_lag, k=5) + (mo), datasan, family=poisson)
+summary(gam2)$r.sq
 
-gam_v3<-gam(Volume_mo ~ s(Inflow_sim_mo, k=5) + s(Outflow_turb_mo, k=5), data_play, family=poisson)
-summary(gam_v3)$r.sq
+gam3<- gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer, k=5) + (mo), datasan, family=poisson)
+summary(gam3)$r.sq
 
-gam_v4<-gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(Outflow_turb_mo, k=5), data_play, family=poisson)
-summary(gam_v4)$r.sq
+gam3<- gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer, k=5) + (mo), datasan, family=poisson)
+summary(gam3)$r.sq
 
-gam_v5<-gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(Outflow_turb_lag, k=5), data_play, family=poisson)
-summary(gam_v5)$r.sq
+gam4<- gam(Outflow_turb_mo ~ s(Inflow_sim_lag, k=5) +  s(Vol_lmer, k=5) + (mo), datasan, family=poisson)
+summary(gam4)$r.sq
 
-# prediction
-data_play$vol_gamv1<-predict(gam_v1, data_play, type="response")
-data_play$vol_gamv2<-predict(gam_v2, data_play, type="response")
-data_play$vol_gamv3<-predict(gam_v3, data_play, type="response")
-data_play$vol_gamv4<-predict(gam_v4, data_play, type="response")
-data_play$vol_gamv5<-predict(gam_v5, data_play, type="response")
-
-# rmse
-caret::postResample(data_play$Volume_mo, data_play$vol_gamv1)[1]
-caret::postResample(data_play$Volume_mo[-1], data_play$vol_gamv2[-1])[1]
-caret::postResample(data_play$Volume_mo, data_play$vol_gamv3)[1]
-caret::postResample(data_play$Volume_mo[-1], data_play$vol_gamv4[-1])[1]
-caret::postResample(data_play$Volume_mo[-1], data_play$vol_gamv5[-1])[1]
-
-# with random effect
-gam_random_v1<- gam(Volume_mo ~ s(Inflow_sim_mo, k=5) + s(mo, bs="re"), data_play, family=poisson)
-summary(gam_random_v1)$r.sq
-
-gam_random_v2<-gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(mo, bs="re"), data_play, family=poisson)
-summary(gam_random_v2)$r.sq
-
-gam_random_v3<-gam(Volume_mo ~ s(Inflow_sim_mo, k=5) + s(Outflow_turb_mo, k=5) + s(mo, bs="re"), data_play, family=poisson)
-summary(gam_random_v2)$r.sq
-
-gam_random_v4<-gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(Outflow_turb_mo, k=5) + s(mo, bs="re"), data_play, family=poisson)
-summary(gam_random_v4)$r.sq
-
-gam_random_v5<-gam(Volume_mo ~ s(Inflow_sim_lag, k=5) + s(Outflow_turb_lag, k=5) + s(mo, bs="re"), data_play, family=poisson)
-summary(gam_random_v5)$r.sq
+gam5<- gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer_lag, k=5) + (mo), datasan, family=poisson)
+summary(gam5)$r.sq
 
 # prediction
-data_play$vol_gam_random1<-predict(gam_random_v1, data_play, type="response")
-data_play$vol_gam_random2<-predict(gam_random_v2, data_play, type="response")
-data_play$vol_gam_random3<-predict(gam_random_v3, data_play, type="response")
-data_play$vol_gam_random4<-predict(gam_random_v4, data_play, type="response")
-data_play$vol_gam_random5<-predict(gam_random_v5, data_play, type="response")
-
+data_play$out_gam1<-predict(gam1, data_play, type="response")
+data_play$out_gam2<-predict(gam2, data_play, type="response")
+data_play$out_gam3<-predict(gam3, data_play, type="response")
+data_play$out_gam4<-predict(gam4, data_play, type="response")
+data_play$out_gam5<-predict(gam5, data_play, type="response")
 
 # rmse
-caret::postResample(data_play$Volume_mo, data_play$vol_gam_random1)[1]
-caret::postResample(data_play$Volume_mo[-1], data_play$vol_gam_random2[-1])[1]
-caret::postResample(data_play$Volume_mo[-1], data_play$vol_gam_random3)[1]
-caret::postResample(data_play$Volume_mo[-1], data_play$vol_gam_random4[-1])[1]
-caret::postResample(data_play$Volume_mo[-1], data_play$vol_gam_random5[-1])[1]
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam1[-c(1,2)])[1]
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam2[-c(1,2)])[1]
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam3[-c(1,2)])[1]
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam4[-c(1,2)])[1]
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam5[-c(1,2)])[1]
 
+# mixed effects
+gam_random1<-gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(mo, bs="re"), datasan, family=poisson)
+summary(gam_random1)$r.sq
+
+gam_random2<-gam(Outflow_turb_mo ~ s(Inflow_sim_lag, k=5) + s(mo, bs="re"), datasan, family=poisson)
+summary(gam_random2)$r.sq
+
+gam_random3<-gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer, k=5) + s(mo, bs="re"), datasan, family=poisson)
+summary(gam_random3)$r.sq
+
+gam_random4<-gam(Outflow_turb_mo ~ s(Inflow_sim_mo, k=5) +  s(Vol_lmer_lag, k=5) + s(mo, bs="re"), datasan, family=poisson)
+summary(gam_random4)$r.sq
+
+
+# prediction
+data_play$out_gam_random1<-predict(gam_random1, data_play, type="response")
+data_play$out_gam_random2<-predict(gam_random2, data_play, type="response")
+data_play$out_gam_random3<-predict(gam_random3, data_play, type="response")
+data_play$out_gam_random4<-predict(gam_random4, data_play, type="response")
+
+# rmse
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam_random1[-c(1,2)])[1]
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam_random2[-c(1,2)])[1]
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam_random3[-c(1,2)])[1]
+caret::postResample(data_play$Outflow_turb_mo[-c(1,2)], data_play$out_gam_random4[-c(1,2)])[1]
 
 
 p1<-data_play %>% 
-  gather(Variable, Value, c(6,14)) %>%
+  gather(Variable, Value, c(5,15)) %>%
   ggplot(., aes(x=Date, y=Value, color=Variable))+
   geom_line()+
   geom_point()+
   scale_x_date(breaks = pretty_breaks(15))+
   theme_light(base_size = 20)
 
-p1
 p2<-data_play %>% 
-  gather(Variable, Value, c(6,15)) %>%
+  gather(Variable, Value, c(5,16)) %>%
   ggplot(., aes(x=Date, y=Value, color=Variable))+
   geom_line()+
   geom_point()+
   scale_x_date(breaks = pretty_breaks(15))+
   theme_light(base_size = 20)
-p2
 
 p3<-data_play %>% 
-  gather(Variable, Value, c(6,16)) %>%
+  gather(Variable, Value, c(5,17)) %>%
   ggplot(., aes(x=Date, y=Value, color=Variable))+
   geom_line()+
   geom_point()+
   scale_x_date(breaks = pretty_breaks(15))+
   theme_light(base_size = 20)
-p3
 
 p4<-data_play %>% 
-  gather(Variable, Value, c(6,17)) %>%
+  gather(Variable, Value, c(5,18)) %>%
   ggplot(., aes(x=Date, y=Value, color=Variable))+
   geom_line()+
   geom_point()+
   scale_x_date(breaks = pretty_breaks(15))+
   theme_light(base_size = 20)
-p4
+
 
 grid.arrange(p1,p2,p3,p4)
 
 data_play %>% 
-  gather(Variable, Value, c(Volume_mo, Vol_lmer, out_gam_random2)) %>%
+  gather(Variable, Value, c(Outflow_turb_mo, Out_lmer,out_gam_random2)) %>%
   ggplot(., aes(x=Date, y=Value, color=Variable))+
   geom_line()+
   geom_point()+
@@ -295,7 +280,7 @@ data_play %>%
   theme_light(base_size = 20)
 
 
-f<-data.frame(real=cumsum(data_play$Volume_mo[-c(1,2)]), lmer=cumsum(data_play$Vol_lmer[-c(1,2)]), gam=cumsum(data_play$out_gam_random2[-c(1,2)]), Date=data_play$Date[-c(1,2)]) %>% 
+f<-data.frame(real=cumsum(data_play$Outflow_turb_mo[-c(1,2)]), lmer=cumsum(data_play$Out_lmer[-c(1,2)]), gam=cumsum(data_play$out_gam_random2[-c(1,2)]), Date=data_play$Date[-c(1,2)]) %>% 
   as_tibble()
 
 
@@ -305,7 +290,9 @@ p5<-f %>%
   geom_line()+
   geom_point()+              
   scale_x_date(breaks = pretty_breaks(15))+
-  theme_light(base_size = 20)+ 
+  theme_light(base_size = 20)+
   theme(axis.text.x=element_text(angle = 45, hjust = 1))
+
+
 
 
