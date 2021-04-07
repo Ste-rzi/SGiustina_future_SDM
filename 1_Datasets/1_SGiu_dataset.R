@@ -1,6 +1,7 @@
 
 #*******************************************************************************
-# # This script to upload the dataset used in the regression modelling 
+# # This script to upload the dataset used in the regression modelling and 
+# # check for variables correlations
 
 #*******************************************************************************
 
@@ -28,6 +29,35 @@ datasan<-read.csv("G:/My Drive/01_PhD/06_Database globali/01_Database nazionali/
 ingeo<-readRDS("G:/My Drive/01_PhD/06_Database globali/01_Database nazionali/01_dataset Trento/01_NOCE/HYDRO/APRIE/RisultatiOrientGate/Time_series/Antropico/prova/AttualeClim/GeoTransf_ref.rds")
 
 sangeot<-inner_join(datasan, ingeo, by="Date", keep=T)
+
+# correlation matrix
+sub_sangeot<-sangeot %>% 
+  dplyr::select(Outflow_turb_mo, Inflow_mo, Volume_mo, Volume_lag, GeoTransf_inflow_mo) %>% 
+  rename("Outflow"= Outflow_turb_mo,
+         "Inflow"=Inflow_mo,
+         "Volume"=Volume_mo,
+         "Volume_lagged"=Volume_lag,
+         "GeoTransf_inflow"=GeoTransf_inflow_mo)
+
+a<-cor(sub_sangeot, use="pairwise.complete.obs")
+
+# plot correlation matrix
+cp_sangeot<-corrplot(a[1:2,],
+                     cl.pos='n',
+                     method = 'circle',
+                     type = "upper",
+                     tl.col = "black",  
+                     tl.srt = 50,
+                     tl.cex=1,
+                     is.corr = T,
+                     pch.cex = 1,
+                     cl.cex = 1,
+                     addCoef.col="red", 
+                     number.cex=1)
+
+# selecting only geotransf inflow values
+only_geot<-sangeot %>% 
+  dplyr::select(Date, GeoTransf_inflow_mo)
 
 # price dataset
 pre<-read.csv("G:/My Drive/01_PhD/06_Database globali/01_Database nazionali/01_dataset Trento/01_NOCE/HYDRO/Prices/Energy_prices.csv") %>%
@@ -105,7 +135,8 @@ cares<-readRDS("C:/Users/STerzi/Documents/R/Noce/HydroNoce/Careser_Malga_Pian/Ca
   rename(Out_careser=Outflow_turb_mo) %>%
   arrange(-desc(Date))
 
-sancares<-inner_join(datasan, cares, by="Date", keep=T)
+sancares<-inner_join(datasan, cares, by="Date", keep=T) %>% 
+  inner_join(., rain, by="Date", keep=T) 
 
 # correlation matrix
 corr_sancares<-sancares %>% 
@@ -135,30 +166,33 @@ cp_sancares<-corrplot(corr_sancares,
 
 
 #### merging datasets
-dt<-inner_join(sanprice, cares, by="Date", keep=T)
-
-# correlation matrix
-corr_dt<-dt %>% 
-  dplyr::select(Outflow_turb_mo, Volume_mo, Inflow_mo, Volume_lag, mo, Price, Out_careser) %>% 
+dt<-inner_join(sanpritemp, cares, by="Date", keep=T) %>%
+  inner_join(., rain, by="Date", keep=T) %>% 
+  inner_join(., only_geot, by="Date", keep=T) %>% 
+  dplyr::select(Outflow_turb_mo, Volume_mo, Inflow_mo, Volume_lag, GeoTransf_inflow_mo, mo, Rainfall, Price, Tempe, Out_careser) %>% 
   rename("Outflow"= Outflow_turb_mo,
          "Inflow"=Inflow_mo,
          "Volume"=Volume_mo,
          "Volume_lagged"=Volume_lag,
-         "month"= mo,
+         "GeoTransf_inflow"=GeoTransf_inflow_mo,
          "PUN"=Price,
-         "Outflow_careser"= Out_careser) %>% 
-  cor(., use="pairwise.complete.obs")
+         "Temperature"=Tempe,
+         "Outflow_careser"=Out_careser)
+
+a<-cor(dt, use="pairwise.complete.obs")
+
+b<-cor.mtest(a)
 
 # plot correlation matrix
-cp_dt<-corrplot(corr_dt,
-                      cl.pos='r',
-                      method = 'circle',
-                      type = "upper",
-                      tl.col = "black",  
-                      tl.srt = 50,
-                      tl.cex=1,
-                      is.corr = T,
-                      pch.cex = q,
-                      cl.cex = 0.75,
-                      addCoef.col="red", 
-                      number.cex=1)
+cp_all<-corrplot(a,
+                 cl.pos='r',
+                 method = 'circle',
+                 type = "upper",
+                 tl.col = "black",  
+                 tl.srt = 50,
+                 tl.cex=1,
+                 is.corr = T,
+                 pch.cex = 1,
+                 cl.cex = 1,
+                 addCoef.col="red", 
+                 number.cex=1)
